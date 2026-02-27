@@ -165,16 +165,30 @@ USUÁRIOS REMOVIDOS - [1]
 ### **Logs da Console:**
 
 ```
-Executando requisição para obter informações de usuários.
-neon.enterprise.slack.com/api: Sucesso na Tentativa 1.
-Tempo total de execução da consulta a API 'neon.enterprise.slack.com/api': 1.234 s
-slack.com/api/users.list: Sucesso na Tentativa 1.
-Tempo total de execução da consulta a API 'slack.com/api/users.list': 0.856 s
-Total de usuários ativos V1 [125] / V2 [123]
-Tempo total de execução da validação: 0.012 s
-Tempo total de execução da escrita: 0.045 s
-Tempo total de execução do envio de mensagem no slack (CHORO): 0.789 s
-Tempo total de execução do envio de mensagem no slack (PV): 0.634 s
+🤖 BOT FOFOQUEIRO INICIADO
+📋 Carregando configurações...
+⏱️ Carregamento de configurações: 0.12s
+📁 Gerenciando arquivos de histórico...
+📖 Arquivo anterior encontrado: lastUserInfo_26_02_2026.txt
+⏱️ Busca do último arquivo: 0.02s
+📚 Carregando dados de usuários anteriores...
+📊 Total de registros anteriores: 120
+⏱️ Carregamento de dados anteriores: 0.08s
+🌐 Buscando dados atuais do Slack...
+✅ Enterprise Teams Info API: Sucesso na tentativa 1
+✅ Users List API: Sucesso na tentativa 1
+⏱️ Busca de dados atuais do Slack: 1.24s
+🤖 Processando usuários atuais...
+👥 Usuários processados: 122 (bots removidos)
+🔍 Comparando dados de usuários...
+📊 Usuários ativos: 121
+🆕 Novos usuários: 2
+❌ Usuários removidos: 1
+💾 Salvando dados atuais...
+📤 Enviando notificações para o Slack...
+✅ Mensagem enviada para Canal CHORO
+✅ Mensagem enviada para Canal PRIVADO
+✅ BOT FOFOQUEIRO FINALIZADO COM SUCESSO
 ```
 
 ## 🔐 Segurança
@@ -197,6 +211,10 @@ Tempo total de execução do envio de mensagem no slack (PV): 0.634 s
 - Requer permissões de leitura no workspace do Slack  
 - Armazena histórico local para comparações
 - Sistema resiliente com retry automático para APIs instáveis
+
+## 📋 Changelog
+
+Consulte o [CHANGELOG.md](CHANGELOG.md) para o histórico completo de alterações.
 
 ---
 
