@@ -2,13 +2,24 @@
 using Newtonsoft.Json;
 using System.Net.Http.Json;
 using System.Text;
+using Microsoft.Extensions.Configuration;
+
+// Configuração
+var builder = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: true)
+    .AddUserSecrets<Program>();
+
+var configuration = builder.Build();
+var config = new SlackBotConfiguration();
+configuration.GetSection("SlackBotConfiguration").Bind(config);
 
 var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 var formContent = new FormUrlEncodedContent(new[]
 {
-    new KeyValuePair<string, string>("token", "xoxc-2651622568611-3634713226258-7805078621094-19b941820d3e750827f144b5ad0ea995e657bda665e7938f9487d7994abbcc32"),
+    new KeyValuePair<string, string>("token", config.SlackToken),
     new KeyValuePair<string, string>("include_user_counts", "true"),
-    new KeyValuePair<string, string>("team", "T0ZHLME6P"),
+    new KeyValuePair<string, string>("team", config.SlackTeamId),
 });
 var currentDateProcess = DateTime.Now.Date;
 var baseFilePath = $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}/SlackUserList/lastUserInfo_[DATE].txt";
@@ -79,8 +90,8 @@ async Task<HttpResponseMessage> SendWithRetryAsync(Func<Task<HttpResponseMessage
 }
 
 var httpRequest = new HttpClient();
-httpRequest.DefaultRequestHeaders.Add("cookie", "ssb_instance_id=0bfddbc7-8f1d-435b-b65b-5185e1c64532; d-s=1727791977; b=.2a15da562b9db5f595c568efa54f1368; tz=-180; shown_ssb_redirect_page=1; OptanonAlertBoxClosed=2024-10-16T11:57:52.832Z; utm=%7B%7D; _gcl_au=1.1.1152462969.1733242978; PageCount=1; _ga_QR4NFYRYGP=GS1.1.1733242978.1.0.1733242978.0.0.0; _ga=GA1.1.1216082973.1733242978; cjConsent=MHxOfDB8Tnww; cjUser=523abb92-bb60-4504-a34b-f21b5b8f8d2d; _cs_c=0; _cs_id=c809829f-fa3d-afdc-c296-79ae94c99771.1733242979.1.1733242979.1733242979.1.1767406979928.1; _ga_QTJQME5M5D=GS1.1.1733242978.1.1.1733243394.60.0.0; x=2a15da562b9db5f595c568efa54f1368.1733501511; OptanonConsent=isGpcEnabled=0&datestamp=Fri+Dec+06+2024+13%3A11%3A53+GMT-0300+(GMT-03%3A00)&version=202402.1.0&browserGpcFlag=0&isIABGlobal=false&hosts=&consentId=4e1e0d18-d74c-4f51-a65d-ef7ea3b2333c&interactionCount=1&isAnonUser=1&landingPath=NotLandingPage&groups=1%3A1%2C2%3A1%2C3%3A1%2C4%3A1&AwaitingReconsent=false&geolocation=BR%3BSP; d=xoxd-lOrMEYt%2F0B%2BOyMRYNgPXhOH9ntAX5hazbmsKVGmPY0ZRC2rEytdwSnCzQkiiaDVlhxJgousuruPZ8NHPmoAi2ldPlPuVZsfA08FhY0egTvn96yJ65alwBlVYLW%2FgQyXECqsxA9w4%2BruE7iGwbyrSEhMQ%2B6KF0ud1pJz%2F9dw09TNhunEVlDhvSQ%3D%3D");
-httpRequest.DefaultRequestHeaders.Add("Authorization", "Bearer xoxc-2651622568611-3634713226258-7805078621094-19b941820d3e750827f144b5ad0ea995e657bda665e7938f9487d7994abbcc32");
+httpRequest.DefaultRequestHeaders.Add("cookie", config.SlackCookie);
+httpRequest.DefaultRequestHeaders.Add("Authorization", $"Bearer {config.SlackToken}");
 var neonTeamInfoResponse = await SendWithRetryAsync(
     () => httpRequest.PostAsync("https://neon.enterprise.slack.com/api/enterprise.teams.info?_x_id=badc0ea1-1733501648.552&slack_route=E02K5JAGQHZ%3AT02K5JAGQHZ&_x_version_ts=noversion&fp=03&_x_num_retries=0", formContent),
     "neon.enterprise.slack.com/api",
@@ -173,9 +184,13 @@ message = message.Replace("||", "\n");
 httpRequest = new HttpClient();
 var content = new StringContent(message, Encoding.UTF8, "application/json");
 
+// CANAL CHORO
+_ = await httpRequest.PostAsync(config.Webhooks.ChoroChannel, content);
+Console.WriteLine($"Tempo total de execução do envio de mensagem no slack (CHORO): {stopwatch.Elapsed.TotalSeconds} s");
+stopwatch.Restart();
 
 // PRIVADO
-_ = await httpRequest.PostAsync("https://hooks.slack.com/services/", content);
+_ = await httpRequest.PostAsync(config.Webhooks.PrivateChannel, content);
 Console.WriteLine($"Tempo total de execução do envio de mensagem no slack (PV): {stopwatch.Elapsed.TotalSeconds} s");
 stopwatch.Restart();
 

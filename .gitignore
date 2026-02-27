@@ -369,3 +369,14 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Configurações sensíveis - NÃO VERSIONAR
+appsettings.Development.json
+appsettings.Production.json
+appsettings.Local.json
+secrets.json
+*.secrets.json
+
+# Arquivos de usuário com dados sensíveis
+lastUserInfo*.txt
+SlackUserList/
