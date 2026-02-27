@@ -168,7 +168,9 @@ namespace bot_fofoqueiro
             Console.WriteLine("📚 Carregando dados de usuários anteriores...");
 
             if (!File.Exists(filePath))
+            {
                 return new List<Member>();
+            }
 
             var lines = await File.ReadAllLinesAsync(filePath);
             Console.WriteLine($"📊 Total de registros anteriores: {lines.Length}");
@@ -176,12 +178,18 @@ namespace bot_fofoqueiro
             var users = new List<Member>();
             foreach (var line in lines)
             {
-                if (string.IsNullOrWhiteSpace(line)) continue;
+                if (string.IsNullOrWhiteSpace(line))
+                {
+                    continue;
+                }
 
                 try
                 {
                     var user = JsonConvert.DeserializeObject<Member>(line);
-                    if (user != null) users.Add(user);
+                    if (user != null)
+                    {
+                        users.Add(user);
+                    }
                 }
                 catch (JsonException ex)
                 {
@@ -246,7 +254,9 @@ namespace bot_fofoqueiro
             var userList = await userListResponse.Content.ReadFromJsonAsync<SlackUserInfoResponse>();
 
             if (teamInfo == null || userList == null)
+            {
                 throw new InvalidOperationException("Falha ao deserializar respostas da API do Slack");
+            }
 
             Console.WriteLine("✅ Dados do Slack obtidos com sucesso");
             return (teamInfo, userList);
