@@ -1,9 +1,8 @@
-﻿using bot_fofoqueiro;
+﻿using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text;
-using Microsoft.Extensions.Configuration;
-using System.Diagnostics;
 
 namespace bot_fofoqueiro
 {
@@ -26,9 +25,9 @@ namespace bot_fofoqueiro
             {
                 // Configurar encoding para exibir emojis corretamente no Windows
                 Console.OutputEncoding = System.Text.Encoding.UTF8;
-                
+
                 Console.WriteLine("🤖 BOT FOFOQUEIRO INICIADO");
-                
+
                 // 1. Configuração inicial
                 _config = LoadConfiguration();
                 _httpClient = CreateHttpClient();
@@ -36,7 +35,7 @@ namespace bot_fofoqueiro
                 // 2. Gerenciar arquivos de histórico
                 var currentDate = DateTime.Now.Date;
                 var (lastUserInfoFile, newUserInfoFile, hasHistory) = ManageUserInfoFiles(currentDate);
-                
+
                 // 3. Carregar dados anteriores
                 var previousUsers = await LoadPreviousUserData(lastUserInfoFile);
                 LogPerformance("Carregamento de dados anteriores");
@@ -47,7 +46,7 @@ namespace bot_fofoqueiro
 
                 // 5. Processar e filtrar usuários
                 var filteredUsers = ProcessCurrentUsers(currentUsers);
-                
+
                 // 6. Comparar dados e identificar mudanças
                 var (newUsers, deletedUsers) = CompareUserData(previousUsers, filteredUsers);
                 LogPerformance("Comparação de dados");
@@ -89,7 +88,7 @@ namespace bot_fofoqueiro
         private static SlackBotConfiguration LoadConfiguration()
         {
             Console.WriteLine("📋 Carregando configurações...");
-            
+
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true)
@@ -106,7 +105,7 @@ namespace bot_fofoqueiro
         private static HttpClient CreateHttpClient()
         {
             var client = new HttpClient();
-            client.DefaultRequestHeaders.Add("cookie", _config.SlackCookie);
+            client.DefaultRequestHeaders.Add("Cookie", _config.SlackCookie);
             client.DefaultRequestHeaders.Add("Authorization", $"Bearer {_config.SlackToken}");
             return client;
         }
@@ -118,10 +117,10 @@ namespace bot_fofoqueiro
         private static (string lastFile, string newFile, bool hasHistory) ManageUserInfoFiles(DateTime currentDate)
         {
             Console.WriteLine("📁 Gerenciando arquivos de histórico...");
-            
+
             var desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             var baseFilePath = Path.Combine(desktopPath, "SlackUserList", "lastUserInfo_[DATE].txt");
-            
+
             var newUserInfoFile = baseFilePath.Replace("[DATE]", currentDate.ToString("dd_MM_yyyy"));
             var (lastUserInfoFile, hasHistory) = FindLastUserInfoFile(baseFilePath, currentDate);
 
@@ -129,7 +128,7 @@ namespace bot_fofoqueiro
             return (lastUserInfoFile, newUserInfoFile, hasHistory);
         }
 
-        private static (string filePath, bool hasHistory) FindLastUserInfoFile(string baseFilePath, 
+        private static (string filePath, bool hasHistory) FindLastUserInfoFile(string baseFilePath,
                                                                                 DateTime currentDate)
         {
             // Procurar arquivo dos últimos 365 dias
@@ -137,7 +136,7 @@ namespace bot_fofoqueiro
             {
                 var searchDate = currentDate.AddDays(-daysBack);
                 var filePath = baseFilePath.Replace("[DATE]", searchDate.ToString("dd_MM_yyyy"));
-                
+
                 if (File.Exists(filePath))
                 {
                     Console.WriteLine($"📖 Arquivo anterior encontrado: {Path.GetFileName(filePath)}");
@@ -147,14 +146,14 @@ namespace bot_fofoqueiro
 
             // Se não encontrou nenhum arquivo, criar um vazio para ontem
             var yesterdayFile = baseFilePath.Replace("[DATE]", currentDate.AddDays(-1).ToString("dd_MM_yyyy"));
-            
+
             // Garantir que o diretório existe
             var directory = Path.GetDirectoryName(yesterdayFile);
             if (!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory!);
             }
-            
+
             File.WriteAllText(yesterdayFile, string.Empty);
             Console.WriteLine($"📄 Primeira execução detectada - Arquivo histórico criado: {Path.GetFileName(yesterdayFile)}");
             return (yesterdayFile, false);
@@ -167,7 +166,7 @@ namespace bot_fofoqueiro
         private static async Task<List<Member>> LoadPreviousUserData(string filePath)
         {
             Console.WriteLine("📚 Carregando dados de usuários anteriores...");
-            
+
             if (!File.Exists(filePath))
                 return new List<Member>();
 
@@ -178,7 +177,7 @@ namespace bot_fofoqueiro
             foreach (var line in lines)
             {
                 if (string.IsNullOrWhiteSpace(line)) continue;
-                
+
                 try
                 {
                     var user = JsonConvert.DeserializeObject<Member>(line);
@@ -194,11 +193,11 @@ namespace bot_fofoqueiro
             return users;
         }
 
-        private static async Task SaveCurrentUserData(string filePath, 
+        private static async Task SaveCurrentUserData(string filePath,
                                                       Member[] users)
         {
             Console.WriteLine("💾 Salvando dados atuais...");
-            
+
             // Garantir que o diretório existe
             var directory = Path.GetDirectoryName(filePath);
             if (!Directory.Exists(directory))
@@ -208,7 +207,7 @@ namespace bot_fofoqueiro
 
             var lines = users.Select(user => JsonConvert.SerializeObject(user));
             await File.WriteAllLinesAsync(filePath, lines);
-            
+
             Console.WriteLine($"💾 Dados salvos: {users.Length} usuários em {Path.GetFileName(filePath)}");
         }
 
@@ -253,8 +252,8 @@ namespace bot_fofoqueiro
             return (teamInfo, userList);
         }
 
-        private static async Task<HttpResponseMessage> SendWithRetryAsync(Func<Task<HttpResponseMessage>> httpCall, 
-                                                                          string callName, 
+        private static async Task<HttpResponseMessage> SendWithRetryAsync(Func<Task<HttpResponseMessage>> httpCall,
+                                                                          string callName,
                                                                           int maxAttempts = 3)
         {
             for (int attempt = 1; attempt <= maxAttempts; attempt++)
@@ -268,7 +267,7 @@ namespace bot_fofoqueiro
                         LogPerformance($"API Call - {callName}");
                         return response;
                     }
-                    
+
                     Console.WriteLine($"⚠️ {callName}: Falha na tentativa {attempt} (Status: {response.StatusCode})");
                 }
                 catch (Exception ex)
@@ -293,7 +292,7 @@ namespace bot_fofoqueiro
         private static Member[] ProcessCurrentUsers(SlackUserInfoResponse userList)
         {
             Console.WriteLine("🤖 Processando usuários atuais...");
-            
+
             var filteredUsers = userList.Members
                 .Where(x => !x.Is_bot)
                 .OrderBy(x => x.Profile.Real_name)
@@ -301,11 +300,11 @@ namespace bot_fofoqueiro
 
             Console.WriteLine($"👥 Usuários processados: {filteredUsers.Length} (bots removidos)");
             LogPerformance("Processamento de usuários");
-            
+
             return filteredUsers;
         }
 
-        private static (List<Member> newUsers, List<Member> deletedUsers) CompareUserData(List<Member> previousUsers, 
+        private static (List<Member> newUsers, List<Member> deletedUsers) CompareUserData(List<Member> previousUsers,
                                                                                           Member[] currentUsers)
         {
             Console.WriteLine("🔍 Comparando dados de usuários...");
@@ -341,10 +340,10 @@ namespace bot_fofoqueiro
 
         #region Slack Notifications
 
-        private static async Task SendSlackNotifications(SlackTeamInfoResponse teamInfo, 
+        private static async Task SendSlackNotifications(SlackTeamInfoResponse teamInfo,
                                                          Member[] currentUsers,
-                                                         List<Member> newUsers, 
-                                                         List<Member> deletedUsers, 
+                                                         List<Member> newUsers,
+                                                         List<Member> deletedUsers,
                                                          DateTime currentDate)
         {
             Console.WriteLine("📤 Enviando notificações para o Slack...");
@@ -357,22 +356,22 @@ namespace bot_fofoqueiro
 
             // Enviar para canal #choro
             await SendToWebhook(notificationClient, _config.Webhooks.ChoroChannel, content, "Canal CHORO");
-            
+
             // Enviar para canal privado
             await SendToWebhook(notificationClient, _config.Webhooks.PrivateChannel, content, "Canal PRIVADO");
 
             Console.WriteLine("✅ Notificações enviadas com sucesso!");
         }
 
-        private static async Task SendToWebhook(HttpClient client, 
-                                                string webhookUrl, 
-                                                StringContent content, 
+        private static async Task SendToWebhook(HttpClient client,
+                                                string webhookUrl,
+                                                StringContent content,
                                                 string channelName)
         {
             try
             {
                 var response = await client.PostAsync(webhookUrl, content);
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     Console.WriteLine($"✅ Mensagem enviada para {channelName}");
@@ -389,10 +388,10 @@ namespace bot_fofoqueiro
             }
         }
 
-        private static string GenerateSlackMessage(SlackTeamInfoResponse teamInfo, 
+        private static string GenerateSlackMessage(SlackTeamInfoResponse teamInfo,
                                                    Member[] currentUsers,
-                                                   List<Member> newUsers, 
-                                                   List<Member> deletedUsers, 
+                                                   List<Member> newUsers,
+                                                   List<Member> deletedUsers,
                                                    DateTime currentDate)
         {
             Console.WriteLine("📝 Gerando mensagem para Slack...");
@@ -400,15 +399,15 @@ namespace bot_fofoqueiro
             var activeUsersV1 = teamInfo.team.user_counts.active_members;
             var activeUsersV2 = currentUsers.Count(x => !x.Deleted);
 
-            var newUsersText = newUsers.Count == 0 
+            var newUsersText = newUsers.Count == 0
                 ? "Nenhum usuário novo"
                 : string.Join("\n", newUsers.Select(x => $"<@{x.Id}> {x.Profile.Real_name}"));
 
-            var deletedUsersText = deletedUsers.Count == 0 
+            var deletedUsersText = deletedUsers.Count == 0
                 ? "Nenhum usuário removido"
-                : string.Join("\n", deletedUsers.Select(x => 
+                : string.Join("\n", deletedUsers.Select(x =>
                 {
-                    var daysText = x.Profile.Start_date != DateTime.MinValue 
+                    var daysText = x.Profile.Start_date != DateTime.MinValue
                         ? $" ({(currentDate - x.Profile.Start_date).TotalDays:F0} dias)"
                         : "";
                     return $"<@{x.Id}> {x.Profile.Real_name}{daysText}";

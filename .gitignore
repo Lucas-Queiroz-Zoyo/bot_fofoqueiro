@@ -376,7 +376,3 @@ appsettings.Production.json
 appsettings.Local.json
 secrets.json
 *.secrets.json
-
-# Arquivos de usuário com dados sensíveis
-lastUserInfo*.txt
-SlackUserList/
