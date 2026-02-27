@@ -19,7 +19,7 @@ O **Bot Fofoqueiro** é uma aplicação Console em .NET que monitora mudanças n
 
 ```mermaid
 graph TB
-    A[🚀 Início da Aplicação] --> B[📁 Buscar arquivo anterior<br/>lastUserInfo_[DATA].txt<br/>até 365 dias atrás]
+    A[🚀 Início da Aplicação] --> B[📁 Buscar arquivo anterior<br/>lastUserInfo de DATA anterior<br/>até 365 dias atrás]
     
     B --> C{Arquivo<br/>encontrado?}
     C -->|Não| D[📄 Criar arquivo vazio<br/>dia anterior]
@@ -28,8 +28,8 @@ graph TB
     
     E --> F[🏗️ Deserializar JSON<br/>dos usuários anteriores]
     
-    F --> G[🌐 API Call 1:<br/>enterprise.teams.info<br/>Obter contagem de usuários]
-    G --> H[🌐 API Call 2:<br/>users.list<br/>Obter lista completa de usuários]
+    F --> G[🌐 API Call 1<br/>enterprise.teams.info<br/>Obter contagem de usuários]
+    G --> H[🌐 API Call 2<br/>users.list<br/>Obter lista completa de usuários]
     
     H --> I[🤖 Filtrar usuários<br/>Remover bots<br/>Ordenar por nome]
     
@@ -43,7 +43,7 @@ graph TB
     
     M --> N[💾 Salvar dados atuais<br/>novo arquivo com data de hoje]
     
-    N --> O[📤 Enviar para Canal #choro<br/>via Webhook]
+    N --> O[📤 Enviar para Canal choro<br/>via Webhook]
     O --> P[📤 Enviar para Canal Privado<br/>via Webhook]
     
     P --> Q[✅ Fim da execução<br/>Aguardar Enter]
