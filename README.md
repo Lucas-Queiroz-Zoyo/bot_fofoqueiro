@@ -117,7 +117,7 @@ dotnet restore
 dotnet run
 
 # Compilar release
-dotnet publish .\bot_fofoqueiro.csproj -c Release -o .\versao_estavel\ -p:PublishSingleFile=true --self-contained true
+dotnet publish bot_fofoqueiro.csproj -c Release -o versao_estavel -p:PublishSingleFile=true --self-contained true
 ```
 
 ## 📁 Estrutura do Projeto

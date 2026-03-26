@@ -258,6 +258,20 @@ namespace bot_fofoqueiro
                 throw new InvalidOperationException("Falha ao deserializar respostas da API do Slack");
             }
 
+            // Verificações adicionais para debug
+            if (teamInfo.team == null)
+            {
+                Console.WriteLine("⚠️ Aviso: teamInfo.team é nulo - dados de contagem podem não estar disponíveis");
+            }
+            else if (teamInfo.team.user_counts == null)
+            {
+                Console.WriteLine("⚠️ Aviso: teamInfo.team.user_counts é nulo - contagem V1 não disponível");
+            }
+            else
+            {
+                Console.WriteLine($"✅ Contagem V1 obtida: {teamInfo.team.user_counts.active_members} usuários ativos");
+            }
+
             Console.WriteLine("✅ Dados do Slack obtidos com sucesso");
             return (teamInfo, userList);
         }
@@ -406,21 +420,38 @@ namespace bot_fofoqueiro
         {
             Console.WriteLine("📝 Gerando mensagem para Slack...");
 
-            var activeUsersV1 = teamInfo.team.user_counts.active_members;
-            var activeUsersV2 = currentUsers.Count(x => !x.Deleted);
+            // Verificações defensivas para evitar null reference exceptions
+            int activeUsersV1;
+            try
+            {
+                activeUsersV1 = teamInfo?.team?.user_counts?.active_members ?? 0;
+                if (activeUsersV1 == 0 && teamInfo != null)
+                {
+                    Console.WriteLine("⚠️ Aviso: Dados de contagem de usuários V1 não disponíveis na resposta da API");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Erro ao obter contagem V1: {ex.Message}");
+                activeUsersV1 = 0;
+            }
+            
+            var activeUsersV2 = currentUsers?.Count(x => !x.Deleted) ?? 0;
 
-            var newUsersText = newUsers.Count == 0
+            // Verificações defensivas para listas e propriedades dos usuários
+            var newUsersText = (newUsers?.Count ?? 0) == 0
                 ? "Nenhum usuário novo"
-                : string.Join("\n", newUsers.Select(x => $"<@{x.Id}> {x.Profile.Real_name}"));
+                : string.Join("\n", newUsers.Select(x => $"<@{x?.Id ?? "ID_DESCONHECIDO"}> {x?.Profile?.Real_name ?? "Nome não disponível"}"));
 
-            var deletedUsersText = deletedUsers.Count == 0
+            var deletedUsersText = (deletedUsers?.Count ?? 0) == 0
                 ? "Nenhum usuário removido"
                 : string.Join("\n", deletedUsers.Select(x =>
                 {
-                    var daysText = x.Profile.Start_date != DateTime.MinValue
+                    var realName = x?.Profile?.Real_name ?? "Nome não disponível";
+                    var daysText = x?.Profile?.Start_date != DateTime.MinValue && x?.Profile?.Start_date != null
                         ? $" ({(currentDate - x.Profile.Start_date).TotalDays:F0} dias)"
                         : "";
-                    return $"<@{x.Id}> {x.Profile.Real_name}{daysText}";
+                    return $"<@{x?.Id ?? "ID_DESCONHECIDO"}> {realName}{daysText}";
                 }));
 
             var message = $@"{{
